@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 # CONFIGURAÇÕES
 # ==================================================
 
-URL_POWER_BI = "https://app.powerbi.com/view?r=eyJrIjoiMjdhZmQ4MGMtNDM4NC00MDUyLWJjN2YtMDI4NDgwZjhiYzgwIiwidCI6ImY0Y2Q4NWNjLWQ1YTAtNGVmZC04NzkzLThhNzg5NDE5MGNmYSJ9&embedImagePlaceholder=true&pageName=c185555803c589c22cb7"
+URL_POWER_BI = "https://app.powerbi.com/view?r=eyJrIjoiMjdhZmQ4MGMtNDM4NC00MDUyLWJjN2YtMDI4NDgwZjhiYzgwIiwidCI6ImY0Y2Q4NWNjLWQ1YTAtNGVmZC04NzkzLThhNzg5NDE5MGNmYSJ9&embedImagePlaceholder=true&pageName=204706e0c37ceab79e87"
 
 REMETENTE_EMAIL = "welliton.almeida@pizzattolog.com.br"
 REMETENTE_SENHA = os.environ.get("SENHA_EMAIL")
@@ -129,34 +129,42 @@ def enviar_email(caminho_imagem):
         cid_imagem = "dashboard_Compras"
 
         html = f"""
-        <html>
-            <body style="font-family: Arial">
+<html>
+    <body style="font-family: Arial">
 
-                <h2>Dashboard Compras</h2>
+        <h2>Dashboard Compras</h2>
 
-                <p>
-                    Relatório atualizado automaticamente.
-                </p>
+        <p>
+            Prezados,
+        </p>
 
-                <p>
-                    <a href="{URL_POWER_BI}">
-                        Abrir Dashboard Online
-                    </a>
-                </p>
+        <p>
+            Segue aprovações pendentes para acompanhamento.
+        </p>
 
-                <br>
+        <p>
+            Acesse também o dashboard completo pelo link abaixo:
+        </p>
 
-                <img src="cid:{cid_imagem}" width="1200">
+        <p>
+            <a href="{URL_POWER_BI}">
+                Abrir Dashboard Online
+            </a>
+        </p>
 
-                <br><br>
+        <br>
 
-                <p>
-                    Enviado automaticamente pelo GitHub Actions.
-                </p>
+        <img src="cid:{cid_imagem}" width="1200">
 
-            </body>
-        </html>
-        """
+        <br><br>
+
+        <p>
+            Enviado automaticamente pelo GitHub Actions.
+        </p>
+
+    </body>
+</html>
+"""
 
         msg.attach(
             MIMEText(
