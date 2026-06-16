@@ -1,0 +1,66 @@
+name: Relatorio Diario de Aprovações
+
+on:
+  schedule:
+    - cron: '30 20 * * 1-5'
+
+  workflow_dispatch:
+
+jobs:
+  executar-relatorio:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+
+      - name: 1. Baixar código
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 3. Atualizar pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: 4. Instalar Playwright
+        run: |
+          pip install playwright
+
+      - name: 5. Instalar Chromium
+        run: |
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: 6. Verificar arquivos
+        run: |
+          pwd
+          ls -R
+
+      - name: 7. Executar relatório
+        env:
+          SENHA_EMAIL: ${{ secrets.SENHA_EMAIL }}
+        run: |
+
+          ARQUIVO_PY=$(find . -iname "relatorio.py" | head -n 1)
+
+          if [ -z "$ARQUIVO_PY" ]; then
+            echo "❌ relatorio.py não encontrado"
+            exit 1
+          fi
+
+          echo "🚀 Executando: $ARQUIVO_PY"
+
+          python "$ARQUIVO_PY"
+
+      - name: 8. Salvar screenshot para diagnóstico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-powerbi
+          path: |
+            **/*.png
+          if-no-files-found: ignore
