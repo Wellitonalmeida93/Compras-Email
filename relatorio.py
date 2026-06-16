@@ -15,7 +15,7 @@ from playwright.sync_api import sync_playwright
 # CONFIGURAÇÕES
 # ==================================================
 
-URL_POWER_BI = "https://app.powerbi.com/view?r=eyJrIjoiZTg0YjIxMjgtYjJhOC00NDY5LWEzYjItNjM0M2IyZTgyMTExIiwidCI6ImY0Y2Q4NWNjLWQ1YTAtNGVmZC04NzkzLThhNzg5NDE5MGNmYSJ9&pageName=2307bfd0ca141332ad94"
+URL_POWER_BI = "https://app.powerbi.com/view?r=eyJrIjoiMjdhZmQ4MGMtNDM4NC00MDUyLWJjN2YtMDI4NDgwZjhiYzgwIiwidCI6ImY0Y2Q4NWNjLWQ1YTAtNGVmZC04NzkzLThhNzg5NDE5MGNmYSJ9&embedImagePlaceholder=true&pageName=c185555803c589c22cb7"
 
 REMETENTE_EMAIL = "welliton.almeida@pizzattolog.com.br"
 REMETENTE_SENHA = os.environ.get("SENHA_EMAIL")
@@ -124,15 +124,15 @@ def enviar_email(caminho_imagem):
 
         msg["From"] = REMETENTE_EMAIL
         msg["To"] = ", ".join(DESTINATARIOS)
-        msg["Subject"] = f"Relatório Diário Salesco - {datetime.now().strftime('%d/%m/%Y')}"
+        msg["Subject"] = f"Relatório Diário de Aprovações - {datetime.now().strftime('%d/%m/%Y')}"
 
-        cid_imagem = "dashboard_salesco"
+        cid_imagem = "dashboard_Compras"
 
         html = f"""
         <html>
             <body style="font-family: Arial">
 
-                <h2>Dashboard Salesco</h2>
+                <h2>Dashboard Compras</h2>
 
                 <p>
                     Relatório atualizado automaticamente.
@@ -180,7 +180,7 @@ def enviar_email(caminho_imagem):
             imagem.add_header(
                 "Content-Disposition",
                 "inline",
-                filename="dashboard_salesco.png"
+                filename="dashboard_compras.png"
             )
 
             msg.attach(imagem)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     caminho_print = os.path.join(
         pasta_script,
-        "print_salesco_auto.png"
+        "print_compras_auto.png"
     )
 
     sucesso_print = capturar_print_powerbi(
