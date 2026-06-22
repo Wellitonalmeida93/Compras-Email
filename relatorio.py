@@ -21,7 +21,24 @@ REMETENTE_EMAIL = "welliton.almeida@pizzattolog.com.br"
 REMETENTE_SENHA = os.environ.get("SENHA_EMAIL")
 
 DESTINATARIOS = [
-    "welliton.almeida@pizzattolog.com.br"
+    "welliton.almeida@pizzattolog.com.br",
+    "magdo.ferreira@pizzattolog.com.br",
+    "alex.moreira@pizzattolog.com.br",
+    "lucas.justus@pizzattolog.com.br",
+    "diego.nascimento@pizzattolog.com.br",
+    "daiane.camilo@pizzattolog.com.br",
+    "carlos.batista@pizzattolog.com.br",
+    "fernando.sarzi@pizzattolog.com.br",
+    "julio.franca@pizzattolog.com.br",
+    "sandro.almeida@pizzattolog.com.br",
+    "anailson.moraes@pizzattolog.com.br",
+    "edemilson.gomes@pizzattolog.com.br",
+    "erick.tosin@pizzattolog.com.br",
+    "sabrina.marinho@pizzattolog.com.br",
+    "frota@pizzattolog.com.br",
+    "leandro.patricio@pizzattolog.com.br"
+    
+    
 ]
 
 SMTP_SERVIDOR = "smtp.gmail.com"
