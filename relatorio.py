@@ -20,45 +20,58 @@ URL_POWER_BI = "https://app.powerbi.com/view?r=eyJrIjoiMjdhZmQ4MGMtNDM4NC00MDUyL
 REMETENTE_EMAIL = "welliton.almeida@pizzattolog.com.br"
 REMETENTE_SENHA = os.environ.get("SENHA_EMAIL")
 
-DESTINATARIOS = [
+# 1. MAPEAMENTO: Apenas Gestores e Gerentes do painel -> E-mail Corporativo
+MAPA_EMAILS = {
+    # --- GESTORES ---
+    "FRANCISCOW": "frota@pizzattolog.com.br",
+    "FERNANDOS": "fernando.sarzi@pizzattolog.com.br",
+    "TIAGOA": "tiago.alves@pizzattolog.com.br",
+    "ANAILSONS": "anailson.moraes@pizzattolog.com.br",
+    "ALEXM": "alex.moreira@pizzattolog.com.br",
+    "ERICKT": "erick.tosin@pizzattolog.com.br",
+    "EDEMILSONG": "edemilson.gomes@pizzattolog.com.br",
+    "GUSTAVOA": "gustavo.alves@pizzattolog.com.br",
+    "JULIANAA": "juliana.andrade@pizzattolog.com.br",
+    "JULIOR": "julio.junior@pizzattolog.com.br",
+    "NILTONM": "nilton.marcondes@pizzattolog.com.br",
+    "SANDROA": "sandro.almeida@pizzattolog.com.br",
+    "ALISONM": "alison.martins@pizzattolog.com.br",
+    "JULIOJ": "julio.franca@pizzattolog.com.br",
+    "LEANDROP": "leandro.patricio@pizzattolog.com.br",
+
+    
+
+    # --- GERÊNCIA ---
+    "DIEGON": "diego.nascimento@pizzattolog.com.br",
+    "CARLOSB": "carlos.batista@pizzattolog.com.br", 
+    "DAIANEC": "daiane.camilo@pizzattolog.com.br",
+    "LUCASW": "lucas.justus@pizzattolog.com.br"
+    
+}
+
+# E-mails que sempre vão receber o relatório completo para monitoramento
+COPIA_FIXA = [
     "welliton.almeida@pizzattolog.com.br",
-    "magdo.ferreira@pizzattolog.com.br",
-    "alex.moreira@pizzattolog.com.br",
-    "lucas.justus@pizzattolog.com.br",
-    "diego.nascimento@pizzattolog.com.br",
-    "daiane.camilo@pizzattolog.com.br",
-    "carlos.batista@pizzattolog.com.br",
-    "fernando.sarzi@pizzattolog.com.br",
-    "julio.franca@pizzattolog.com.br",
-    "sandro.almeida@pizzattolog.com.br",
-    "anailson.moraes@pizzattolog.com.br",
-    "edemilson.gomes@pizzattolog.com.br",
-    "erick.tosin@pizzattolog.com.br",
-    "sabrina.marinho@pizzattolog.com.br",
-    "frota@pizzattolog.com.br",
-    "leandro.patricio@pizzattolog.com.br",
-    "tiago.alves@pizzattolog.com.br"
-    
-    
+    "magdo.ferreira@pizzattolog.com.br"
 ]
 
 SMTP_SERVIDOR = "smtp.gmail.com"
 SMTP_PORTA = 587
 
 # ==================================================
-# CAPTURA DO POWER BI
+# CAPTURA DO POWER BI E LEITURA DE TEXTOS
 # ==================================================
 
-def capturar_print_powerbi(url, caminho_saida):
+def capturar_print_e_usuarios(url, caminho_saida):
 
     print("=" * 60)
-    print("📸 INICIANDO CAPTURA DO POWER BI")
+    print("📸 INICIANDO CAPTURA E LEITURA DO POWER BI")
     print("=" * 60)
+
+    usuarios_detectados = set()
 
     try:
-
         with sync_playwright() as p:
-
             browser = p.chromium.launch(
                 headless=True,
                 args=[
@@ -68,80 +81,71 @@ def capturar_print_powerbi(url, caminho_saida):
                 ]
             )
 
-            context = browser.new_context(
-                viewport={
-                    "width": 1920,
-                    "height": 1080
-                }
-            )
-
+            context = browser.new_context(viewport={"width": 1920, "height": 1080})
             page = context.new_page()
-
             page.set_default_timeout(120000)
 
             print("🌐 Abrindo dashboard...")
+            page.goto(url, wait_until="domcontentloaded", timeout=120000)
 
-            page.goto(
-                url,
-                wait_until="domcontentloaded",
-                timeout=120000
-            )
-
-            print("⏳ Aguardando renderização dos gráficos...")
+            print("⏳ Aguardando renderização dos gráficos (60s)...")
             time.sleep(60)
 
+            # 🔍 PROCURANDO OS NOMES DOS USUÁRIOS DENTRO DOS GRÁFICOS (SVG text elements)
+            print("🔍 Identificando usuários ativos na tela...")
+            text_elements = page.locator("svg text, text, .visual-title").all_text_contents()
+            
+            for texto in text_elements:
+                texto_limpo = texto.strip().upper()
+                # Se o texto capturado bater com alguma chave do nosso MAPA_EMAILS, nós adicionamos
+                if texto_limpo in MAPA_EMAILS:
+                    usuarios_detectados.add(texto_limpo)
+
+            print(f"👥 Usuários encontrados com pendências hoje: {list(usuarios_detectados)}")
+
             print("📷 Capturando screenshot...")
-
-            page.screenshot(
-                path=caminho_saida,
-                full_page=True
-            )
-
+            page.screenshot(path=caminho_saida, full_page=True)
             browser.close()
 
             if not os.path.exists(caminho_saida):
                 print("❌ Screenshot não foi criada.")
-                return False
+                return False, []
 
-            tamanho = os.path.getsize(caminho_saida)
-
-            print(f"✅ Screenshot criada.")
-            print(f"📦 Tamanho: {tamanho:,} bytes")
-
-            if tamanho < 10000:
-                print("⚠️ Screenshot muito pequena.")
-                return False
-
-            return True
+            return True, list(usuarios_detectados)
 
     except Exception:
-
         print("\n❌ ERRO AO CAPTURAR O POWER BI")
         traceback.print_exc(file=sys.stdout)
-
-        return False
+        return False, []
 
 
 # ==================================================
-# ENVIO DE E-MAIL
+# ENVIO DE E-MAIL DINÂMICO
 # ==================================================
 
-def enviar_email(caminho_imagem):
+def enviar_email(caminho_imagem, usuarios_pendentes):
 
     print("=" * 60)
-    print("📧 ENVIANDO E-MAIL")
+    print("📧 ENVIANDO E-MAIL DIRECIONADO")
     print("=" * 60)
 
     try:
-
         if not REMETENTE_SENHA:
             print("❌ SENHA_EMAIL não encontrada.")
             return False
 
-        msg = MIMEMultipart("related")
+        # Monta a lista de destinatários finais baseada em quem apareceu na tela
+        destinatarios_finais = list(COPIA_FIXA)
+        for user in usuarios_pendentes:
+            email_user = MAPA_EMAILS.get(user)
+            if email_user and email_user not in destinatarios_finais:
+                destinatarios_finais.append(email_user)
 
+        print(f"📬 Lista final de envio para este e-mail: {destinatarios_finais}")
+
+        msg = MIMEMultipart("related")
         msg["From"] = REMETENTE_EMAIL
-        msg["To"] = ", ".join(DESTINATARIOS)
+        msg["To"] = ", ".join(destinatarios_finais)
         msg["Subject"] = f"Relatório Diário de Aprovações - {datetime.now().strftime('%d/%m/%Y')}"
 
         cid_imagem = "dashboard_Compras"
@@ -149,104 +153,45 @@ def enviar_email(caminho_imagem):
         html = f"""
 <html>
     <body style="font-family: Arial">
-
         <h2>Dashboard Compras</h2>
-
-        <p>
-            Prezados,
-        </p>
-
-        <p>
-            Segue aprovações pendentes para acompanhamento.
-        </p>
-
-        <p>
-            Acesse também o dashboard completo pelo link abaixo:
-        </p>
-
-        <p>
-            <a href="{URL_POWER_BI}">
-                Abrir Dashboard Online
-            </a>
-        </p>
-
+        <p>Prezados,</p>
+        <p>Segue aprovações pendentes para acompanhamento.</p>
+        <p>Acesse também o dashboard completo pelo link abaixo:</p>
+        <p><a href="{URL_POWER_BI}">Abrir Dashboard Online</a></p>
         <br>
-
         <img src="cid:{cid_imagem}" width="1200">
-
         <br><br>
-
-        <p>
-            Enviado automaticamente pelo GitHub Actions.
-        </p>
-
+        <p>Enviado automaticamente pelo GitHub Actions.</p>
     </body>
 </html>
 """
 
-        msg.attach(
-            MIMEText(
-                html,
-                "html",
-                "utf-8"
-            )
-        )
+        msg.attach(MIMEText(html, "html", "utf-8"))
 
         with open(caminho_imagem, "rb") as arquivo:
-
-            imagem = MIMEImage(
-                arquivo.read()
-            )
-
-            imagem.add_header(
-                "Content-ID",
-                f"<{cid_imagem}>"
-            )
-
-            imagem.add_header(
-                "Content-Disposition",
-                "inline",
-                filename="dashboard_compras.png"
-            )
-
+            imagem = MIMEImage(arquivo.read())
+            imagem.add_header("Content-ID", f"<{cid_imagem}>")
+            imagem.add_header("Content-Disposition", "inline", filename="dashboard_compras.png")
             msg.attach(imagem)
 
         print("📡 Conectando Gmail SMTP...")
-
-        with smtplib.SMTP(
-            SMTP_SERVIDOR,
-            SMTP_PORTA,
-            timeout=60
-        ) as server:
-
+        with smtplib.SMTP(SMTP_SERVIDOR, SMTP_PORTA, timeout=60) as server:
             server.ehlo()
             server.starttls()
             server.ehlo()
 
             print("🔑 Realizando login...")
-
-            server.login(
-                REMETENTE_EMAIL,
-                REMETENTE_SENHA
-            )
+            server.login(REMETENTE_EMAIL, REMETENTE_SENHA)
 
             print("📤 Enviando e-mail...")
-
-            server.sendmail(
-                REMETENTE_EMAIL,
-                DESTINATARIOS,
-                msg.as_string()
-            )
+            server.sendmail(REMETENTE_EMAIL, destinatarios_finais, msg.as_string())
 
         print("✅ E-mail enviado com sucesso.")
-
         return True
 
     except Exception:
-
         print("\n❌ ERRO AO ENVIAR E-MAIL")
         traceback.print_exc(file=sys.stdout)
-
         return False
 
 
@@ -258,27 +203,18 @@ if __name__ == "__main__":
 
     print("🚀 INICIANDO PROCESSO")
 
-    pasta_script = os.path.dirname(
-        os.path.abspath(__file__)
-    )
+    pasta_script = os.path.dirname(os.path.abspath(__file__))
+    caminho_print = os.path.join(pasta_script, "print_compras_auto.png")
 
-    caminho_print = os.path.join(
-        pasta_script,
-        "print_compras_auto.png"
-    )
-
-    sucesso_print = capturar_print_powerbi(
-        URL_POWER_BI,
-        caminho_print
-    )
+    # Modificado para retornar o print E a lista de usuários extraída
+    sucesso_print, usuarios_na_tela = capturar_print_e_usuarios(URL_POWER_BI, caminho_print)
 
     if not sucesso_print:
         print("🛑 Falha ao capturar dashboard.")
         sys.exit(1)
 
-    sucesso_email = enviar_email(
-        caminho_print
-    )
+    # Passa a lista capturada para o envio do e-mail filtrar os alvos
+    sucesso_email = enviar_email(caminho_print, usuarios_na_tela)
 
     if not sucesso_email:
         print("🛑 Falha ao enviar e-mail.")
