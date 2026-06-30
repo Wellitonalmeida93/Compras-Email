@@ -36,7 +36,8 @@ DESTINATARIOS = [
     "erick.tosin@pizzattolog.com.br",
     "sabrina.marinho@pizzattolog.com.br",
     "frota@pizzattolog.com.br",
-    "leandro.patricio@pizzattolog.com.br"
+    "leandro.patricio@pizzattolog.com.br",
+    "tiago.alves@pizzattolog.com.br"
     
     
 ]
