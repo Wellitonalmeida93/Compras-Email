@@ -20,7 +20,7 @@ URL_POWER_BI = "https://app.powerbi.com/view?r=eyJrIjoiMjdhZmQ4MGMtNDM4NC00MDUyL
 REMETENTE_EMAIL = "welliton.almeida@pizzattolog.com.br"
 REMETENTE_SENHA = os.environ.get("SENHA_EMAIL")
 
-# 1. MAPEAMENTO: Apenas Gestores e Gerentes do painel -> E-mail Corporativo
+# 1. MAPEAMENTO: Gestores e Gerentes do painel -> E-mail Corporativo
 MAPA_EMAILS = {
     # --- GESTORES ---
     "FRANCISCOW": "frota@pizzattolog.com.br",
@@ -39,14 +39,11 @@ MAPA_EMAILS = {
     "JULIOJ": "julio.franca@pizzattolog.com.br",
     "LEANDROP": "leandro.patricio@pizzattolog.com.br",
 
-    
-
     # --- GERÊNCIA ---
     "DIEGON": "diego.nascimento@pizzattolog.com.br",
     "CARLOSB": "carlos.batista@pizzattolog.com.br", 
     "DAIANEC": "daiane.camilo@pizzattolog.com.br",
     "LUCASW": "lucas.justus@pizzattolog.com.br"
-    
 }
 
 # E-mails que sempre vão receber o relatório completo para monitoramento
@@ -126,7 +123,7 @@ def capturar_print_e_usuarios(url, caminho_saida):
 def enviar_email(caminho_imagem, usuarios_pendentes):
 
     print("=" * 60)
-    print("📧 ENVIANDO E-MAIL DIRECIONADO")
+    print("📧 ENVIANDO E-MAIL PARA TODOS OS GESTORES E GERENTES")
     print("=" * 60)
 
     try:
@@ -134,14 +131,16 @@ def enviar_email(caminho_imagem, usuarios_pendentes):
             print("❌ SENHA_EMAIL não encontrada.")
             return False
 
-        # Monta a lista de destinatários finais baseada em quem apareceu na tela
+        # Começa com a cópia fixa
         destinatarios_finais = list(COPIA_FIXA)
-        for user in usuarios_pendentes:
-            email_user = MAPA_EMAILS.get(user)
+        
+        # MODIFICAÇÃO AQUI: Em vez de usar apenas os 'usuarios_pendentes', 
+        # agora pegamos TODOS do MAPA_EMAILS diretamente.
+        for email_user in MAPA_EMAILS.values():
             if email_user and email_user not in destinatarios_finais:
                 destinatarios_finais.append(email_user)
 
-        print(f"📬 Lista final de envio para este e-mail: {destinatarios_finais}")
+        print(f"📬 Lista final de envio para este e-mail ({len(destinatarios_finais)} destinatários): {destinatarios_finais}")
 
         msg = MIMEMultipart("related")
         msg["From"] = REMETENTE_EMAIL
@@ -155,7 +154,7 @@ def enviar_email(caminho_imagem, usuarios_pendentes):
     <body style="font-family: Arial">
         <h2>Dashboard Compras</h2>
         <p>Prezados,</p>
-        <p>Segue aprovações pendentes para acompanhamento.</p>
+        <p>Segue aprovações pendentes para acompanhamento Geral.</p>
         <p>Acesse também o dashboard completo pelo link abaixo:</p>
         <p><a href="{URL_POWER_BI}">Abrir Dashboard Online</a></p>
         <br>
@@ -206,14 +205,15 @@ if __name__ == "__main__":
     pasta_script = os.path.dirname(os.path.abspath(__file__))
     caminho_print = os.path.join(pasta_script, "print_compras_auto.png")
 
-    # Modificado para retornar o print E a lista de usuários extraída
+    # Mantivemos a função de captura caso você queira resolver a leitura em tela futuramente,
+    # porém a lista gerada aqui 'usuarios_na_tela' não influenciará no envio por enquanto.
     sucesso_print, usuarios_na_tela = capturar_print_e_usuarios(URL_POWER_BI, caminho_print)
 
     if not sucesso_print:
         print("🛑 Falha ao capturar dashboard.")
         sys.exit(1)
 
-    # Passa a lista capturada para o envio do e-mail filtrar os alvos
+    # Passa a lista (mesmo que vazia ou incompleta) mas a função enviará para todos.
     sucesso_email = enviar_email(caminho_print, usuarios_na_tela)
 
     if not sucesso_email:
